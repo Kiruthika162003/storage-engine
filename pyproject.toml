@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "store"
+version = "0.1.0"
+description = "A key value storage engine, built as a set of measurements"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.scripts]
+store = "store.cli.main:main"
+
+[tool.setuptools.packages.find]
+include = ["store*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 96
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "W",
+    "I",
+    "N",
+    "UP",
+    "B",
+    "A",
+    "C4",
+    "PIE",
+    "RET",
+    "SIM",
+    "ARG",
+    "PL",
+    "RUF",
+]
+ignore = [
+    # N818 wants an Error suffix on every exception. The hierarchy in store/errors.py reads
+    # better without it: raise Corrupt(path) says what happened and CorruptError says it twice.
+    "N818",
+    "PLR0913",
+    "PLR2004",
+    "PLR0912",
+    "PLR0915",
+    "PLR0911",
+    "SIM108",
+    "RET504",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["PLR0915", "ARG002"]
+
+[tool.ruff.format]
+quote-style = "double"
