@@ -44,6 +44,7 @@ CLAIMING = (
     "store.composite",
     "store.radix",
     "store.admission",
+    "store.bufferpool",
     "store.eval.findings",
     "store.eval.scaling",
     "store.eval.latency",
