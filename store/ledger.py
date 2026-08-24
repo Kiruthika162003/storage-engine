@@ -60,6 +60,7 @@ CLAIMING = (
     "store.bulkload",
     "store.writebatch",
     "store.wheel",
+    "store.snapshotscan",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
