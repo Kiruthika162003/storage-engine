@@ -115,6 +115,7 @@ CLAIMING = (
     "store.zorder",
     "store.jobqueue",
     "store.merkle",
+    "store.graphadj",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
