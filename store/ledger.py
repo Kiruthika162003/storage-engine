@@ -103,6 +103,7 @@ CLAIMING = (
     "store.aging",
     "store.tracing",
     "store.multiget",
+    "store.errorbudget",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
