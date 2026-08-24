@@ -40,6 +40,7 @@ CLAIMING = (
     "store.rangedel",
     "store.scrub",
     "store.cuckoo",
+    "store.hll",
     "store.eval.findings",
     "store.eval.scaling",
     "store.eval.latency",
