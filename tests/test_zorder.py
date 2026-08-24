@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import itertools
+
 import pytest
 
 from store.zorder import (
@@ -66,7 +68,7 @@ class TestCover:
 
     def test_ranges_are_disjoint_and_sorted(self):
         ranges = cover(Box(100, 131, 100, 131))
-        for (low_a, high_a), (low_b, _) in zip(ranges, ranges[1:]):
+        for (low_a, high_a), (low_b, _) in itertools.pairwise(ranges):
             assert low_a <= high_a < low_b
 
     def test_the_cover_area_equals_the_box_area(self):
