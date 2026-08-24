@@ -85,6 +85,7 @@ CLAIMING = (
     "store.parallelscan",
     "store.doublewrite",
     "store.equidepth",
+    "store.hamming",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
