@@ -97,6 +97,7 @@ CLAIMING = (
     "store.monotonic",
     "store.stampede",
     "store.retry",
+    "store.circuit",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
