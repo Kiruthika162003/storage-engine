@@ -112,6 +112,7 @@ CLAIMING = (
     "store.bitcask",
     "store.copyonwrite",
     "store.ngram",
+    "store.zorder",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
