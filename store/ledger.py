@@ -96,6 +96,7 @@ CLAIMING = (
     "store.compactionpicker",
     "store.monotonic",
     "store.stampede",
+    "store.retry",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
