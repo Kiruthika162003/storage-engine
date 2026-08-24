@@ -33,11 +33,11 @@ class TestAdaptive:
     def test_the_cold_start_patience_is_generous(self):
         assert Adaptive().patience() == INTERVAL * 4.0
 
-    def test_beats_record_their_gaps(self):
+    def test_beats_record_gaps_after_the_first(self):
         detector = Adaptive()
         for now in (10, 20, 30):
             detector.beat(now)
-        assert detector.gaps == [10, 10, 10]
+        assert detector.gaps == [10, 10]
 
     def test_the_window_is_bounded(self):
         detector = Adaptive()
