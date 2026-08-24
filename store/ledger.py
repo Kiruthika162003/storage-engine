@@ -77,6 +77,7 @@ CLAIMING = (
     "store.watch",
     "store.cachewarm",
     "store.simulation",
+    "store.bitpack",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
