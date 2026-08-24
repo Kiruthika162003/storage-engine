@@ -94,6 +94,7 @@ CLAIMING = (
     "store.fence",
     "store.audit",
     "store.compactionpicker",
+    "store.monotonic",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
