@@ -99,6 +99,7 @@ CLAIMING = (
     "store.retry",
     "store.circuit",
     "store.hedged",
+    "store.loadshed",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
