@@ -81,6 +81,7 @@ CLAIMING = (
     "store.writeskew",
     "store.slotted",
     "store.chunker",
+    "store.floatxor",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
