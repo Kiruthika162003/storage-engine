@@ -117,6 +117,7 @@ CLAIMING = (
     "store.merkle",
     "store.graphadj",
     "store.salting",
+    "store.backfill",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
