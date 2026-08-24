@@ -52,6 +52,7 @@ CLAIMING = (
     "store.hashlog",
     "store.externalsort",
     "store.eval.findings",
+    "store.eval.recovery",
     "store.eval.scaling",
     "store.eval.latency",
     "store.verify.metamorphic",
