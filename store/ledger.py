@@ -98,6 +98,7 @@ CLAIMING = (
     "store.stampede",
     "store.retry",
     "store.circuit",
+    "store.hedged",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
