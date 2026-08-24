@@ -79,6 +79,7 @@ CLAIMING = (
     "store.simulation",
     "store.bitpack",
     "store.writeskew",
+    "store.slotted",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
