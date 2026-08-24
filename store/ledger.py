@@ -41,6 +41,7 @@ CLAIMING = (
     "store.scrub",
     "store.cuckoo",
     "store.hll",
+    "store.composite",
     "store.eval.findings",
     "store.eval.scaling",
     "store.eval.latency",
