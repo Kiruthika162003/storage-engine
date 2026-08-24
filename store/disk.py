@@ -17,7 +17,7 @@ from store.errors import ConfigError
 #
 # The model is deliberately harsh in one way and generous in another. Harsh: a crash loses every
 # pending byte, where a real crash often keeps a prefix of them. Generous: a sync is atomic and
-# a durable byte never changes, where a real medium can tear a sector. rsm.torn covers the tear
+# a durable byte never changes, where a real medium can tear a sector. The torn write is covered
 # separately, so this file can stay simple and say what it assumes.
 
 # The size of a sector, which is the unit a real disk writes atomically.
