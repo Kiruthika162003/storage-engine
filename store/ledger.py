@@ -122,6 +122,7 @@ CLAIMING = (
     "store.writepolicy",
     "store.groupcommit",
     "store.overflow",
+    "store.heartbeat",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
