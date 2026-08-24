@@ -84,6 +84,7 @@ CLAIMING = (
     "store.floatxor",
     "store.parallelscan",
     "store.doublewrite",
+    "store.equidepth",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
