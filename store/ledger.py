@@ -120,6 +120,7 @@ CLAIMING = (
     "store.backfill",
     "store.pagination",
     "store.writepolicy",
+    "store.groupcommit",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
