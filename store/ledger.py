@@ -111,6 +111,7 @@ CLAIMING = (
     "store.tdigest",
     "store.bitcask",
     "store.copyonwrite",
+    "store.ngram",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
