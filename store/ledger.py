@@ -64,6 +64,7 @@ CLAIMING = (
     "store.topk",
     "store.reservoir",
     "store.failpoints",
+    "store.interval",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
