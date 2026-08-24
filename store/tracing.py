@@ -92,7 +92,8 @@ def the_flame_graph_crowns_the_wrong_operation() -> bool:
     the cache.
     """
     totals = total_by_name(_request())
-    return totals["cache_read"] > 190 > 100 and totals["index_update"] == 28
+    wall = _request().duration
+    return totals["cache_read"] > wall * 1.9 and totals["index_update"] == 28
 
 
 @functools.cache
@@ -163,7 +164,9 @@ def the_sum_over_wall_ratio_measures_the_parallelism() -> bool:
 def summarise() -> dict:
     """Every claim in this module, run."""
     return {
-        "the_flame_graph_lies_under_concurrency": the_flame_graph_crowns_the_wrong_operation(),
+        "the_flame_graph_lies_under_concurrency": (
+            the_flame_graph_crowns_the_wrong_operation()
+        ),
         "the_path_names_the_gate": the_critical_path_names_the_gate(),
         "off_path_work_moves_nothing": optimising_off_the_path_moves_nothing(),
         "the_ratio_is_the_warning": the_sum_over_wall_ratio_measures_the_parallelism(),
