@@ -43,24 +43,27 @@ class TestSpans:
         made.add(b"x", b"z", 2)
         assert made.covering(b"b") and made.covering(b"y") and len(made) == 2
 
-    def test_overlapping_spans_merge(self):
+    def test_overlapping_spans_truncate_the_older(self):
         made = Spans()
         made.add(b"a", b"m", 1)
         made.add(b"h", b"z", 2)
-        assert len(made) == 1
+        assert len(made) == 2
+        assert made.covering(b"c").sequence == 1
+        assert made.covering(b"i").sequence == 2
 
-    def test_a_merge_takes_the_widest_bounds(self):
+    def test_a_covering_add_swallows_the_older_whole(self):
         made = Spans()
         made.add(b"d", b"h", 1)
         made.add(b"a", b"z", 2)
         span = made.covering(b"e")
-        assert span.start == b"a" and span.stop == b"z"
+        assert span.start == b"a" and span.stop == b"z" and len(made) == 1
 
-    def test_a_merge_keeps_the_newest_sequence(self):
+    def test_each_fragment_keeps_its_own_epoch(self):
         made = Spans()
-        made.add(b"a", b"m", 5)
+        made.add(b"a", b"m", 1)
         made.add(b"h", b"z", 2)
-        assert made.covering(b"i").sequence == 5
+        assert made.covering(b"a").sequence == 1
+        assert made.covering(b"y").sequence == 2
 
     def test_the_held_spans_stay_sorted(self):
         made = Spans()
@@ -134,8 +137,8 @@ class TestMeasurements:
     def test_reads_pay_the_check(self):
         assert mod.the_read_side_pays_one_span_check_per_read()
 
-    def test_overlaps_merge(self):
-        assert mod.overlapping_ranges_merge_into_one_span()
+    def test_overlaps_truncate(self):
+        assert mod.overlaps_truncate_and_the_span_count_stays_geometric()
 
     def test_later_writes_survive(self):
         assert mod.a_write_after_the_delete_survives_it()

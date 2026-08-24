@@ -81,6 +81,7 @@ CLAIMING = (
     "store.eval.scaling",
     "store.eval.latency",
     "store.verify.metamorphic",
+    "store.verify.opsfuzz",
 )
 
 

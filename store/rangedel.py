@@ -45,18 +45,26 @@ class Spans:
     checks: int = field(default=0)
 
     def add(self, start: bytes, stop: bytes, sequence: int) -> None:
-        """Install a range, merging whatever it overlaps."""
-        fresh_start, fresh_stop = start, stop
+        """Install a range, truncating older spans rather than merging into them.
+
+        The first version merged overlaps into one span carrying the maximum sequence, and
+        the ops fuzzer caught what that does: the new delete's sequence spreads over the old
+        span's territory, hiding keys legitimately re-written between the two deletes. A
+        span's sequence is a claim about when its region was deleted, and a merge that
+        widens the region falsifies the claim. The fix keeps the newest span whole and cuts
+        the older ones down to their uncovered remainders, so every point is covered by
+        exactly the span that last deleted it.
+        """
         kept: list[Span] = []
-        top = sequence
         for span in self.held:
-            if span.stop < fresh_start or span.start > fresh_stop:
+            if span.stop <= start or span.start >= stop:
                 kept.append(span)
                 continue
-            fresh_start = min(fresh_start, span.start)
-            fresh_stop = max(fresh_stop, span.stop)
-            top = max(top, span.sequence)
-        kept.append(Span(start=fresh_start, stop=fresh_stop, sequence=top))
+            if span.start < start:
+                kept.append(Span(start=span.start, stop=start, sequence=span.sequence))
+            if span.stop > stop:
+                kept.append(Span(start=stop, stop=span.stop, sequence=span.sequence))
+        kept.append(Span(start=start, stop=stop, sequence=sequence))
         kept.sort(key=lambda span: span.start)
         self.held = kept
 
@@ -176,19 +184,27 @@ def the_read_side_pays_one_span_check_per_read() -> bool:
 
 
 @functools.cache
-def overlapping_ranges_merge_into_one_span() -> bool:
-    """Twenty overlapping deletes leave one span, so the search stays logarithmic.
+def overlaps_truncate_and_the_span_count_stays_geometric() -> bool:
+    """Twenty overlapping deletes leave 20 disjoint fragments, one per surviving epoch.
 
-    Without merging, the span set grows by one per delete forever and the read check decays
-    into a walk. With it, the set's size tracks the geometry of what is deleted rather than
-    the history of deleting it, which is the difference between a structure and a log.
+    The first version merged them into one span, and the ops fuzzer proved the merge wrong:
+    it spread the newest delete's sequence over territory deleted earlier, hiding keys
+    re-written in between. Truncation keeps the set disjoint, so the binary search
+    survives, and bounded, at most two fragments added per delete, so the count tracks the
+    layout of what is deleted rather than the raw history. What is genuinely lost is the
+    single-span tidiness, and the fuzzer's verdict is that the tidiness was a correctness
+    bug wearing a space optimisation's clothes.
     """
     spans = Spans()
     for at in range(20):
         start = f"{at:02d}".encode()
         stop = f"{at + 2:02d}".encode()
         spans.add(start, stop, at + 1)
-    return len(spans) == 1
+    disjoint = all(
+        earlier.stop <= later.start
+        for earlier, later in zip(spans.held, spans.held[1:], strict=False)
+    )
+    return disjoint and len(spans) == 20
 
 
 @functools.cache
@@ -240,7 +256,7 @@ def summarise() -> dict:
     return {
         "one_write_per_drop": dropping_a_tenant_is_one_write_instead_of_five_hundred(),
         "reads_pay_the_check": the_read_side_pays_one_span_check_per_read(),
-        "overlaps_merge": overlapping_ranges_merge_into_one_span(),
+        "overlaps_truncate": overlaps_truncate_and_the_span_count_stays_geometric(),
         "later_writes_survive": a_write_after_the_delete_survives_it(),
         "disjoint_stays_disjoint": disjoint_ranges_stay_separate(),
     }
