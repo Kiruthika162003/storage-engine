@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from examples import bank, lifecycle, sessions, telemetry, tenants
+from examples import bank, feed, lifecycle, sessions, telemetry, tenants, warehouse
 from store.composite import encode_field
 from store.rangedel import Ranged
 from store.ttl import Shelf
@@ -79,3 +79,17 @@ class TestLifecycle:
         assert lifecycle.main() == 0
         out = capsys.readouterr().out
         assert "agrees=True" in out and "invariants: True" in out
+
+
+class TestFeed:
+    def test_the_feed_runs_clean(self, capsys):
+        assert feed.main() == 0
+        out = capsys.readouterr().out
+        assert "newest first): True" in out and "lag after catch-up: 0" in out
+
+
+class TestWarehouse:
+    def test_the_warehouse_runs_clean(self, capsys):
+        assert warehouse.main() == 0
+        out = capsys.readouterr().out
+        assert "held 1 group" in out and "skipped" in out
