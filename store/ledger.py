@@ -72,6 +72,7 @@ CLAIMING = (
     "store.timeseries",
     "store.bitmap",
     "store.joins",
+    "store.groupagg",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
