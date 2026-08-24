@@ -113,6 +113,7 @@ CLAIMING = (
     "store.copyonwrite",
     "store.ngram",
     "store.zorder",
+    "store.jobqueue",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
