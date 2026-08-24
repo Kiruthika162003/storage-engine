@@ -119,6 +119,7 @@ CLAIMING = (
     "store.salting",
     "store.backfill",
     "store.pagination",
+    "store.writepolicy",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
