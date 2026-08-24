@@ -122,10 +122,8 @@ def a_shifted_working_set_makes_warmup_worthless() -> bool:
     was down long enough for the world to move.
     """
     saved = save_keys(run_and_return(_hot_stream()))
-    moved = tuple(
-        Reference(blocks=2000, length=20000, shape="hot", seed=271).stream()[at] + 100000
-        for at in range(20000)
-    )
+    base = Reference(blocks=2000, length=20000, shape="hot", seed=271).stream()
+    moved = tuple(number + 100000 for number in base)
     cold = Recent(capacity=256)
     cold_ramp = run(cold, list(moved), Ramp())
     warmed = Recent(capacity=256)
