@@ -106,7 +106,7 @@ CLAIMING = (
     "store.errorbudget",
     "store.eval.readpath",
     "store.eval.writepath",
-    "store.quota",
+    "store.fairshare",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",

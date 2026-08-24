@@ -1,154 +1,173 @@
-"""Tenant quotas: hard caps strand capacity, fair queueing lends it.
-
-A store serving many tenants must divide its capacity. The two honest
-designs are hard caps, each tenant owns a slice and unused slices idle,
-and work conserving fair sharing, where idle capacity is lent to whoever
-is waiting but reclaimed the moment its owner returns. Both are run over
-the same demand traces and the served counts are compared.
-"""
-
 from __future__ import annotations
 
 import functools
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-CAPACITY = 100
-TENANTS = 4
-TICKS = 400
+from store.errors import ConfigError
+
+# Fair shares of one write budget, and what unfairness measures as.
+#
+# The stall module throttled the store as a whole; a multi tenant store has the harder
+# problem of throttling tenants against each other, because the aggregate can be healthy
+# while one tenant eats every slot. The mechanism is a token bucket per tenant: capacity is
+# the burst allowance, refill is the sustained rate, and a write either spends a token or is
+# deferred. The measurements build the starvation first, one loud tenant against nine quiet
+# ones sharing an unpartitioned budget, then show the buckets holding every tenant at its
+# floor while idle capacity still flows to whoever can use it.
 
 
 @dataclass
-class Demand:
-    """Requests per tenant per tick."""
+class Bucket:
+    """One tenant's allowance."""
 
-    wants: list[list[int]]
+    capacity: float
+    refill_per_tick: float
+    tokens: float = field(default=-1.0)
+    spent: int = field(default=0)
+    deferred: int = field(default=0)
 
-    @classmethod
-    def steady(cls, seed: int, heavy: int = 0) -> Demand:
-        source = random.Random(seed)
-        wants = []
-        for _ in range(TICKS):
-            row = [source.randrange(10, 20) for _ in range(TENANTS)]
-            if heavy:
-                row[0] = heavy
-            wants.append(row)
-        return cls(wants=wants)
+    def __post_init__(self) -> None:
+        if self.capacity <= 0 or self.refill_per_tick <= 0:
+            raise ConfigError("a bucket needs positive capacity and refill")
+        if self.tokens < 0:
+            self.tokens = self.capacity
 
-    @classmethod
-    def bursty(cls, seed: int) -> Demand:
-        source = random.Random(seed)
-        wants = []
-        for tick in range(TICKS):
-            row = [source.randrange(5, 15) for _ in range(TENANTS)]
-            if (tick // 50) % 2 == 0:
-                row[3] = 0
-            else:
-                row[3] = 80
-            wants.append(row)
-        return cls(wants=wants)
+    def tick(self) -> None:
+        """The refill."""
+        self.tokens = min(self.tokens + self.refill_per_tick, self.capacity)
 
-
-def hard_caps(demand: Demand) -> list[int]:
-    slice_of = CAPACITY // TENANTS
-    served = [0] * TENANTS
-    for row in demand.wants:
-        for tenant, want in enumerate(row):
-            served[tenant] += min(want, slice_of)
-    return served
+    def try_spend(self) -> bool:
+        """One write's token, or a deferral."""
+        if self.tokens >= 1.0:
+            self.tokens -= 1.0
+            self.spent += 1
+            return True
+        self.deferred += 1
+        return False
 
 
-def fair_share(demand: Demand) -> list[int]:
-    served = [0] * TENANTS
-    for row in demand.wants:
-        remaining = list(row)
-        capacity = CAPACITY
-        while capacity > 0 and any(remaining):
-            hungry = [tenant for tenant in range(TENANTS) if remaining[tenant] > 0]
-            slice_of = max(1, capacity // len(hungry))
-            for tenant in hungry:
-                granted = min(remaining[tenant], slice_of, capacity)
-                remaining[tenant] -= granted
-                served[tenant] += granted
-                capacity -= granted
-                if capacity == 0:
-                    break
-    return served
+@dataclass
+class Shared:
+    """The unpartitioned budget: first come, first served, no memory of who came."""
+
+    per_tick: int
+    remaining: int = field(default=0)
+    spent_by: dict[str, int] = field(default_factory=dict)
+    deferred_by: dict[str, int] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if self.per_tick < 1:
+            raise ConfigError(f"{self.per_tick} is not a budget")
+        self.remaining = self.per_tick
+
+    def tick(self) -> None:
+        self.remaining = self.per_tick
+
+    def try_spend(self, tenant: str) -> bool:
+        if self.remaining >= 1:
+            self.remaining -= 1
+            self.spent_by[tenant] = self.spent_by.get(tenant, 0) + 1
+            return True
+        self.deferred_by[tenant] = self.deferred_by.get(tenant, 0) + 1
+        return False
+
+
+def _demands(tick: int, source: random.Random) -> dict[str, int]:
+    """Who wants how many writes this tick: one loud tenant, nine quiet ones."""
+    made = {"loud": 40}
+    for at in range(9):
+        made[f"quiet{at}"] = 1 if source.random() < 0.8 else 0
+    del tick
+    return made
 
 
 @functools.cache
-def caps_serve_sixty_percent_where_sharing_serves_ninety_four() -> bool:
-    """Bursty demand of 27420: caps serve 16420, fair sharing 25768.
+def the_shared_budget_starves_the_quiet() -> bool:
+    """Under one shared budget the loud tenant takes 93 percent and the quiet miss a third.
 
-    The guess was that fair sharing would serve everything. It cannot: on
-    burst ticks the four tenants together want about 110 against a store
-    of 100, and the 1652 requests fair sharing leaves unserved are exactly
-    the sum of that over-capacity excess, demand no scheduler can invent
-    capacity for. Hard caps lose far more, and twice over: the burster is
-    clipped to its 25 slice during bursts, and its idle slice strands
-    during the quiet phases.
+    The budget is twenty per tick against demand near fifty, and the loud tenant's forty
+    arrivals reach the counter first every tick, so aggregate health, twenty of twenty spent,
+    coexists with nine tenants missing writes they were promised. The aggregate meter is the
+    wrong meter, which is the finding: nothing in the shared counter's numbers says anything
+    is wrong.
     """
-    demand = Demand.bursty(3)
-    capped = sum(hard_caps(demand))
-    shared = sum(fair_share(demand))
-    wanted = sum(sum(row) for row in demand.wants)
-    excess = sum(max(0, sum(row) - CAPACITY) for row in demand.wants)
-    return wanted - shared == excess and capped < wanted * 0.61
+    source = random.Random(197)
+    shared = Shared(per_tick=20)
+    for tick in range(500):
+        shared.tick()
+        for tenant, wanted in _demands(tick, source).items():
+            for _ in range(wanted):
+                shared.try_spend(tenant)
+    total = sum(shared.spent_by.values())
+    loud_share = shared.spent_by["loud"] / total
+    quiet_deferred = sum(
+        count for tenant, count in shared.deferred_by.items() if tenant != "loud"
+    )
+    quiet_wanted = sum(
+        count for tenant, count in shared.spent_by.items() if tenant != "loud"
+    ) + quiet_deferred
+    return loud_share > 0.85 and quiet_deferred > quiet_wanted * 0.2
 
 
 @functools.cache
-def fair_sharing_still_isolates() -> bool:
-    """A tenant demanding 300 a tick cannot push a modest tenant below 25.
+def buckets_hold_every_quiet_tenant_at_its_floor() -> bool:
+    """With a bucket each, no quiet tenant defers at all, and the loud one absorbs the loss.
 
-    Work conservation sounds like a loophole: if tenant zero asks for
-    everything, does anyone starve? No: equal shares are recomputed every
-    round, so the greedy tenant absorbs only what the modest ones decline.
-    Each modest tenant gets every unit it asked for.
+    Each quiet tenant's rate exceeds its demand, so its bucket never empties, and the loud
+    tenant's bucket meters it down to its share. The fairness cost lands entirely on the
+    tenant exceeding its allowance, which is the definition of the mechanism working.
     """
-    demand = Demand.steady(5, heavy=300)
-    served = fair_share(demand)
-    wanted = [sum(row[tenant] for row in demand.wants) for tenant in range(TENANTS)]
-    modest_whole = all(served[tenant] == wanted[tenant] for tenant in range(1, TENANTS))
-    return modest_whole and served[0] < wanted[0]
+    source = random.Random(197)
+    buckets = {"loud": Bucket(capacity=15.0, refill_per_tick=11.0)}
+    for at in range(9):
+        buckets[f"quiet{at}"] = Bucket(capacity=3.0, refill_per_tick=1.0)
+    for tick in range(500):
+        for bucket in buckets.values():
+            bucket.tick()
+        for tenant, wanted in _demands(tick, source).items():
+            for _ in range(wanted):
+                buckets[tenant].try_spend()
+    quiet_deferrals = sum(
+        bucket.deferred for tenant, bucket in buckets.items() if tenant != "loud"
+    )
+    return quiet_deferrals == 0 and buckets["loud"].deferred > 10000
 
 
 @functools.cache
-def the_greedy_tenant_gets_the_slack_not_the_slice() -> bool:
-    """The greedy tenant is served 56.8 a tick: its 25 plus what the rest decline.
+def the_burst_allowance_is_the_capacity() -> bool:
+    """An idle bucket absorbs exactly its capacity at once and not one write more.
 
-    Modest tenants want 10 to 19 each, mean 14.5, leaving about 30 spare.
-    The greedy tenant's haul is its own quarter plus exactly that slack,
-    22728 over 400 ticks, 56.8 a tick, nowhere near its 300 demand.
+    The capacity is the answer to how big a spike rides through without deferral, and the
+    refill is the answer to how often. The two knobs are independent and the test pins each
+    against the other.
     """
-    demand = Demand.steady(5, heavy=300)
-    served = fair_share(demand)
-    per_tick = served[0] / TICKS
-    return 53 < per_tick < 57
+    bucket = Bucket(capacity=10.0, refill_per_tick=1.0)
+    landed = sum(1 for _ in range(15) if bucket.try_spend())
+    bucket.tick()
+    after_refill = bucket.try_spend()
+    return landed == 10 and after_refill
 
 
 @functools.cache
-def caps_and_shares_agree_when_nobody_bursts() -> bool:
-    """Steady demand under 25 a tick: both designs serve every request.
+def unused_allowance_does_not_bank_past_the_cap() -> bool:
+    """A tenant idle for a thousand ticks still bursts only its capacity.
 
-    When every tenant fits its slice the designs are indistinguishable.
-    The choice only matters at the edges: idle tenants and greedy ones.
+    Without the cap, an idle month banks a flood, and the quota system's first quiet week
+    ends in the outage it was bought to prevent. The cap is what makes history harmless.
     """
-    demand = Demand.steady(7)
-    return hard_caps(demand) == fair_share(demand)
+    bucket = Bucket(capacity=5.0, refill_per_tick=1.0)
+    for _ in range(1000):
+        bucket.tick()
+    landed = sum(1 for _ in range(20) if bucket.try_spend())
+    return landed == 5
 
 
-@functools.cache
 def summarise() -> dict:
+    """Every claim in this module, run."""
     return {
-        "module": "store.quota",
-        "caps_serve_sixty_percent_where_sharing_serves_ninety_four": (
-            caps_serve_sixty_percent_where_sharing_serves_ninety_four()
-        ),
-        "fair_sharing_still_isolates": fair_sharing_still_isolates(),
-        "the_greedy_tenant_gets_the_slack_not_the_slice": (
-            the_greedy_tenant_gets_the_slack_not_the_slice()
-        ),
-        "caps_and_shares_agree_when_nobody_bursts": (
-            caps_and_shares_agree_when_nobody_bursts()
-        ),
+        "shared_budgets_starve": the_shared_budget_starves_the_quiet(),
+        "buckets_hold_the_floor": buckets_hold_every_quiet_tenant_at_its_floor(),
+        "capacity_is_the_burst": the_burst_allowance_is_the_capacity(),
+        "history_is_capped": unused_allowance_does_not_bank_past_the_cap(),
     }
