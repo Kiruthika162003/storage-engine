@@ -6,7 +6,10 @@ from store import ledger
 from store.amplification import table as amplification_table
 from store.compaction import compare_the_policies
 from store.eval.latency import compare_the_utilisations
+from store.eval.readpath import sweep as readpath_sweep
 from store.eval.run import table as workload_table
+from store.eval.writepath import sweep as writepath_sweep
+from store.eval.writepath import worst_case_lost
 from store.shard import compare_the_growth
 
 # The package's findings rendered as text, which is where findings go to be read.
@@ -72,4 +75,19 @@ def render(full: bool = True) -> str:
         out.write(_table(compare_the_growth(), "sharding: the cost of growing"))
         out.write("\n")
         out.write(_table(compare_the_utilisations(), "queueing: utilisation against waits"))
+        out.write("\n")
+        out.write(_table(list(readpath_sweep()), "the read path swept"))
+        out.write("\n")
+        honest = [
+            {
+                "sync_every": row["sync_every"],
+                "flush_at": row["flush_at"],
+                "charges": row["charges"],
+                "worst_lost": worst_case_lost(row["sync_every"], row["flush_at"]),
+                "replay": row["replay"],
+                "flushes": row["flushes"],
+            }
+            for row in writepath_sweep()
+        ]
+        out.write(_table(honest, "the write path swept"))
     return out.getvalue()
