@@ -93,6 +93,7 @@ CLAIMING = (
     "store.cas",
     "store.fence",
     "store.audit",
+    "store.compactionpicker",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
