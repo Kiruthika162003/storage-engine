@@ -74,6 +74,7 @@ CLAIMING = (
     "store.joins",
     "store.groupagg",
     "store.segments",
+    "store.watch",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
