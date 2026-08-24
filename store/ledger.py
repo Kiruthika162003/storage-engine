@@ -114,6 +114,7 @@ CLAIMING = (
     "store.ngram",
     "store.zorder",
     "store.jobqueue",
+    "store.merkle",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
