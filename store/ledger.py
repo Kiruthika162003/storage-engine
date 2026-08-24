@@ -73,6 +73,7 @@ CLAIMING = (
     "store.bitmap",
     "store.joins",
     "store.groupagg",
+    "store.segments",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
