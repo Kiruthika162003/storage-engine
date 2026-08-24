@@ -2,105 +2,81 @@ from __future__ import annotations
 
 import pytest
 
-from store import quota as mod
-from store.errors import ConfigError
-from store.quota import Bucket, Shared
+from store.quota import (
+    CAPACITY,
+    TENANTS,
+    TICKS,
+    Demand,
+    caps_and_shares_agree_when_nobody_bursts,
+    caps_serve_sixty_percent_where_sharing_serves_ninety_four,
+    fair_share,
+    fair_sharing_still_isolates,
+    hard_caps,
+    summarise,
+    the_greedy_tenant_gets_the_slack_not_the_slice,
+)
 
 
-class TestBucket:
-    def test_a_zero_capacity_is_refused(self):
-        with pytest.raises(ConfigError):
-            Bucket(capacity=0, refill_per_tick=1)
+class TestDemand:
+    def test_steady_is_deterministic(self):
+        assert Demand.steady(3).wants == Demand.steady(3).wants
 
-    def test_a_zero_refill_is_refused(self):
-        with pytest.raises(ConfigError):
-            Bucket(capacity=1, refill_per_tick=0)
+    def test_steady_has_a_row_per_tick(self):
+        demand = Demand.steady(3)
+        assert len(demand.wants) == TICKS
+        assert all(len(row) == TENANTS for row in demand.wants)
 
-    def test_a_fresh_bucket_is_full(self):
-        assert Bucket(capacity=5, refill_per_tick=1).tokens == 5.0
+    def test_heavy_overrides_tenant_zero(self):
+        demand = Demand.steady(3, heavy=99)
+        assert all(row[0] == 99 for row in demand.wants)
 
-    def test_a_spend_takes_one_token(self):
-        bucket = Bucket(capacity=5, refill_per_tick=1)
-        assert bucket.try_spend() and bucket.tokens == 4.0
-
-    def test_an_empty_bucket_defers(self):
-        bucket = Bucket(capacity=1, refill_per_tick=0.1)
-        bucket.try_spend()
-        assert not bucket.try_spend() and bucket.deferred == 1
-
-    def test_the_refill_restores(self):
-        bucket = Bucket(capacity=2, refill_per_tick=1)
-        bucket.try_spend()
-        bucket.try_spend()
-        bucket.tick()
-        assert bucket.try_spend()
-
-    def test_the_refill_never_exceeds_capacity(self):
-        bucket = Bucket(capacity=2, refill_per_tick=10)
-        bucket.tick()
-        assert bucket.tokens == 2.0
-
-    def test_fractional_refills_accumulate(self):
-        bucket = Bucket(capacity=2, refill_per_tick=0.5)
-        bucket.try_spend()
-        bucket.try_spend()
-        bucket.tick()
-        assert not bucket.try_spend()
-        bucket.tick()
-        assert bucket.try_spend()
-
-    def test_spends_are_counted(self):
-        bucket = Bucket(capacity=3, refill_per_tick=1)
-        bucket.try_spend()
-        bucket.try_spend()
-        assert bucket.spent == 2
+    def test_bursty_alternates_phases(self):
+        demand = Demand.bursty(3)
+        assert demand.wants[0][3] == 0
+        assert demand.wants[50][3] == 80
 
 
-class TestShared:
-    def test_a_zero_budget_is_refused(self):
-        with pytest.raises(ConfigError):
-            Shared(per_tick=0)
+class TestSchedulers:
+    def test_hard_caps_never_exceed_the_slice(self):
+        demand = Demand.steady(3, heavy=500)
+        served = hard_caps(demand)
+        assert served[0] == TICKS * (CAPACITY // TENANTS)
 
-    def test_spends_draw_down_the_tick(self):
-        shared = Shared(per_tick=2)
-        assert shared.try_spend("a") and shared.try_spend("b")
-        assert not shared.try_spend("c")
+    def test_fair_share_never_exceeds_capacity(self):
+        demand = Demand.steady(3, heavy=500)
+        assert sum(fair_share(demand)) <= TICKS * CAPACITY
 
-    def test_the_tick_restores_the_budget(self):
-        shared = Shared(per_tick=1)
-        shared.try_spend("a")
-        shared.tick()
-        assert shared.try_spend("a")
+    def test_fair_share_never_serves_more_than_wanted(self):
+        demand = Demand.steady(3)
+        served = fair_share(demand)
+        wanted = [
+            sum(row[tenant] for row in demand.wants) for tenant in range(TENANTS)
+        ]
+        assert all(served[t] <= wanted[t] for t in range(TENANTS))
 
-    def test_spending_is_attributed(self):
-        shared = Shared(per_tick=5)
-        shared.try_spend("a")
-        shared.try_spend("a")
-        shared.try_spend("b")
-        assert shared.spent_by == {"a": 2, "b": 1}
+    def test_fair_share_serves_everything_under_capacity(self):
+        demand = Demand.steady(11)
+        wanted = sum(sum(row) for row in demand.wants)
+        assert sum(fair_share(demand)) == wanted
 
-    def test_deferrals_are_attributed(self):
-        shared = Shared(per_tick=1)
-        shared.try_spend("a")
-        shared.try_spend("b")
-        assert shared.deferred_by == {"b": 1}
+    def test_an_idle_tenant_is_served_nothing(self):
+        demand = Demand(wants=[[10, 0, 10, 10]] * 5)
+        assert fair_share(demand)[1] == 0
 
 
-class TestMeasurements:
-    def test_shared_budgets_starve(self):
-        assert mod.the_shared_budget_starves_the_quiet()
+class TestClaims:
+    @pytest.mark.parametrize(
+        "claim",
+        [
+            caps_serve_sixty_percent_where_sharing_serves_ninety_four,
+            fair_sharing_still_isolates,
+            the_greedy_tenant_gets_the_slack_not_the_slice,
+            caps_and_shares_agree_when_nobody_bursts,
+        ],
+    )
+    def test_claim_holds(self, claim):
+        assert claim() is True
 
-    def test_buckets_hold_the_floor(self):
-        assert mod.buckets_hold_every_quiet_tenant_at_its_floor()
-
-    def test_capacity_is_the_burst(self):
-        assert mod.the_burst_allowance_is_the_capacity()
-
-    def test_history_is_capped(self):
-        assert mod.unused_allowance_does_not_bank_past_the_cap()
-
-    def test_every_claim_holds(self):
-        assert all(mod.summarise().values())
-
-    def test_the_summary_names_four_claims(self):
-        assert len(mod.summarise()) == 4
+    def test_summary_is_all_true(self):
+        told = summarise()
+        assert all(value for name, value in told.items() if name != "module")
