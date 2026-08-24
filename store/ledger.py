@@ -83,6 +83,7 @@ CLAIMING = (
     "store.chunker",
     "store.floatxor",
     "store.parallelscan",
+    "store.doublewrite",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
