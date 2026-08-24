@@ -90,6 +90,7 @@ CLAIMING = (
     "store.inverted",
     "store.undo",
     "store.idempotency",
+    "store.cas",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
