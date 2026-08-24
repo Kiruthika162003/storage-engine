@@ -121,6 +121,7 @@ CLAIMING = (
     "store.pagination",
     "store.writepolicy",
     "store.groupcommit",
+    "store.overflow",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
