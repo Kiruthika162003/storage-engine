@@ -116,6 +116,7 @@ CLAIMING = (
     "store.jobqueue",
     "store.merkle",
     "store.graphadj",
+    "store.salting",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
