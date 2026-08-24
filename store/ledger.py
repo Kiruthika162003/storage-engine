@@ -70,6 +70,7 @@ CLAIMING = (
     "store.columnar",
     "store.dictionary",
     "store.timeseries",
+    "store.bitmap",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
