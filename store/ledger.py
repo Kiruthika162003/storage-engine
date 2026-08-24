@@ -68,6 +68,7 @@ CLAIMING = (
     "store.btreebulk",
     "store.quota",
     "store.columnar",
+    "store.dictionary",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
