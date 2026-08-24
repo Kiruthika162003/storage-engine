@@ -118,6 +118,7 @@ CLAIMING = (
     "store.graphadj",
     "store.salting",
     "store.backfill",
+    "store.pagination",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
