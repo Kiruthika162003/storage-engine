@@ -159,7 +159,8 @@ def interleaved_scans_defeat_a_single_run_detector() -> bool:
     honest statement of this module's design is that it is per stream and must be given
     streams.
     """
-    woven = [number for pair in zip(range(1000), range(5000, 6000)) for number in pair]
+    pairs = zip(range(1000), range(5000, 6000), strict=True)
+    woven = [number for pair in pairs for number in pair]
     made = drive(Prefetcher(), woven)
     return made["coverage"] < 0.01
 
@@ -167,7 +168,8 @@ def interleaved_scans_defeat_a_single_run_detector() -> bool:
 def compare_the_patterns() -> list[dict]:
     """One row per access pattern."""
     source = random.Random(31)
-    woven = [number for pair in zip(range(1000), range(5000, 6000)) for number in pair]
+    pairs = zip(range(1000), range(5000, 6000), strict=True)
+    woven = [number for pair in pairs for number in pair]
     rows = []
     for name, blocks in (
         ("scan", list(range(2000))),
