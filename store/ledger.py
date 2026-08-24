@@ -87,6 +87,7 @@ CLAIMING = (
     "store.equidepth",
     "store.hamming",
     "store.schemaevo",
+    "store.inverted",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
