@@ -98,10 +98,8 @@ class TestEviction:
     def test_exhaustion_is_counted(self):
         pool = Pool(capacity=1)
         pool.pin(1)
-        try:
+        with pytest.raises(TooLarge):
             pool.pin(2)
-        except TooLarge:
-            pass
         assert pool.exhausted == 1
 
     def test_a_dirty_eviction_writes_back(self):
