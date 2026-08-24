@@ -110,6 +110,7 @@ CLAIMING = (
     "store.doublecache",
     "store.tdigest",
     "store.bitcask",
+    "store.copyonwrite",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
