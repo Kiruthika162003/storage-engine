@@ -65,6 +65,7 @@ CLAIMING = (
     "store.reservoir",
     "store.failpoints",
     "store.interval",
+    "store.btreebulk",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
