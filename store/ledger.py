@@ -63,6 +63,7 @@ CLAIMING = (
     "store.snapshotscan",
     "store.topk",
     "store.reservoir",
+    "store.failpoints",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
