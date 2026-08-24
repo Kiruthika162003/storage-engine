@@ -58,6 +58,7 @@ CLAIMING = (
     "store.predicate",
     "store.planner",
     "store.bulkload",
+    "store.writebatch",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
