@@ -91,6 +91,7 @@ CLAIMING = (
     "store.undo",
     "store.idempotency",
     "store.cas",
+    "store.fence",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
