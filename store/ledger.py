@@ -46,6 +46,7 @@ CLAIMING = (
     "store.admission",
     "store.bufferpool",
     "store.prefetch",
+    "store.hotcold",
     "store.eval.findings",
     "store.eval.scaling",
     "store.eval.latency",
