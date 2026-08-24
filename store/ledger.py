@@ -102,6 +102,7 @@ CLAIMING = (
     "store.loadshed",
     "store.aging",
     "store.tracing",
+    "store.multiget",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
