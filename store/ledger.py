@@ -108,6 +108,7 @@ CLAIMING = (
     "store.eval.writepath",
     "store.fairshare",
     "store.doublecache",
+    "store.tdigest",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
