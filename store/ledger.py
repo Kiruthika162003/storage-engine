@@ -48,6 +48,7 @@ CLAIMING = (
     "store.prefetch",
     "store.hotcold",
     "store.manifest_compact",
+    "store.lockmanager",
     "store.eval.findings",
     "store.eval.scaling",
     "store.eval.latency",
