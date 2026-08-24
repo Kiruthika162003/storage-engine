@@ -69,6 +69,7 @@ CLAIMING = (
     "store.quota",
     "store.columnar",
     "store.dictionary",
+    "store.timeseries",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
