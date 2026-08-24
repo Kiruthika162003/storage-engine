@@ -109,6 +109,7 @@ CLAIMING = (
     "store.fairshare",
     "store.doublecache",
     "store.tdigest",
+    "store.bitcask",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
