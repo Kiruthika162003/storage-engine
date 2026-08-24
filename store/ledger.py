@@ -61,6 +61,7 @@ CLAIMING = (
     "store.writebatch",
     "store.wheel",
     "store.snapshotscan",
+    "store.topk",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
