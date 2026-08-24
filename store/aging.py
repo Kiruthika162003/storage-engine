@@ -150,7 +150,11 @@ def summarise() -> dict:
     """Every claim in this module, run."""
     return {
         "strict_priority_starves": strict_priority_starves_the_low_job_literally(),
-        "the_bound_is_gap_over_rate": aging_bounds_the_wait_by_the_priority_gap_over_the_rate(),
-        "the_rate_is_the_trade": a_faster_rate_shortens_the_worst_wait_and_costs_the_high_class(),
+        "the_bound_is_gap_over_rate": (
+            aging_bounds_the_wait_by_the_priority_gap_over_the_rate()
+        ),
+        "the_rate_is_the_trade": (
+            a_faster_rate_shortens_the_worst_wait_and_costs_the_high_class()
+        ),
         "equals_are_fifo": equal_priorities_serve_in_arrival_order(),
     }
