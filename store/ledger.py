@@ -78,6 +78,7 @@ CLAIMING = (
     "store.cachewarm",
     "store.simulation",
     "store.bitpack",
+    "store.writeskew",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
