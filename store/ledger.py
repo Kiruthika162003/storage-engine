@@ -105,6 +105,7 @@ CLAIMING = (
     "store.multiget",
     "store.errorbudget",
     "store.eval.readpath",
+    "store.eval.writepath",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
