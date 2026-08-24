@@ -56,6 +56,7 @@ CLAIMING = (
     "store.arena",
     "store.vlog",
     "store.predicate",
+    "store.planner",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
