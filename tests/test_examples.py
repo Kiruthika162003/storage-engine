@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from examples import bank, feed, lifecycle, sessions, telemetry, tenants, warehouse
+from examples import bank, feed, lifecycle, ops, search, sessions, telemetry, tenants, warehouse
 from store.composite import encode_field
 from store.rangedel import Ranged
 from store.ttl import Shelf
@@ -93,3 +93,21 @@ class TestWarehouse:
         assert warehouse.main() == 0
         out = capsys.readouterr().out
         assert "held 1 group" in out and "skipped" in out
+
+
+class TestSearch:
+    def test_the_search_runs_clean(self, capsys):
+        assert search.main() == 0
+        out = capsys.readouterr().out
+        assert "agrees with grep: True" in out
+        assert "provably hot queries: [b'the files']" in out
+
+
+class TestOps:
+    def test_the_ops_story_runs_clean(self, capsys):
+        assert ops.main() == 0
+        out = capsys.readouterr().out
+        assert "in 1 tick instead of 30" in out
+        assert "fast burn pages at tick 200" in out
+        assert "post-recovery peak 1000" in out
+        assert "peak 41 against capacity 100" in out
