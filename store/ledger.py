@@ -55,6 +55,7 @@ CLAIMING = (
     "store.timekey",
     "store.arena",
     "store.vlog",
+    "store.predicate",
     "store.eval.findings",
     "store.eval.recovery",
     "store.eval.scaling",
