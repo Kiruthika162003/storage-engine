@@ -50,6 +50,7 @@ CLAIMING = (
     "store.manifest_compact",
     "store.lockmanager",
     "store.hashlog",
+    "store.externalsort",
     "store.eval.findings",
     "store.eval.scaling",
     "store.eval.latency",
