@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from store import snapshotscan as mod
+from store.engine import Store
 from store.snapshotscan import pin, sequence_only_items
 
 
@@ -29,8 +30,6 @@ class TestPin:
         assert held[b"k0010"] == b"v"
 
     def test_a_pin_of_an_empty_store_is_empty(self):
-        from store.engine import Store
-
         assert pin(Store()).items() == []
 
     def test_two_reads_of_one_pin_agree(self):
