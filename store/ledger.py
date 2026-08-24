@@ -49,6 +49,7 @@ CLAIMING = (
     "store.hotcold",
     "store.manifest_compact",
     "store.lockmanager",
+    "store.hashlog",
     "store.eval.findings",
     "store.eval.scaling",
     "store.eval.latency",
